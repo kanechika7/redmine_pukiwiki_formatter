@@ -55,7 +55,7 @@ class PukiWikiParser
         buf.concat parse_dl(take_block(lines, /\A:/))
       else
         buf.push '<p>'
-        buf.concat parse_p(take_block(lines, /\A(?![*\s>:\-\+]|----|\z)/))
+        buf.push parse_p(take_block(lines, /\A(?![*\s>:\-\+]|----|\z)/)).join("<br />")
         buf.push '</p>'
       end
     end
