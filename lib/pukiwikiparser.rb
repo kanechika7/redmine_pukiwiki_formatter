@@ -132,22 +132,33 @@ class PukiWikiParser
   def parse_inline(str)
     @inline_re ||= %r<
         ([&<>"])                             # $1: HTML escape characters
-      | \[\[(.+?):\s*(https?://\S+)\s*\]\]   # $2: label, $3: URI
-      | (#{autolink_re()})                   # $4: Page name autolink
-      | \[\[(.+?)\>(.+?)\]\]                 # $5: alias, $6: target
-      | (#{URI.regexp('http')})              # $7...: URI autolink
+      | '''(.+?)'''                          # $2: italic text
+      | ''(.+?)''                            # $3: strong text
+      | \[\[(.+?):\s*(https?://\S+)\s*\]\]   # $4: label, $5: URI
+      | (#{autolink_re()})                   # $6: Page name autolink
+      | \[\[(.+?)\>(.+?)\]\]                 # $7: alias, $8: target
+      | (#{URI.regexp('http')})              # $9...: URI autolink
       >x
     str.gsub(@inline_re) {
       case
       when htmlchar = $1 then escape(htmlchar)
-      when bracket  = $2 then a_href($3, bracket, 'outlink')
-      when pagename = $4 then "[[#{pagename}|#{pagename}]]"
-      when page_alias = $5 then "[[#{$6}|#{page_alias}]]"
-      when uri      = $7 then a_href(uri, uri, 'outlink')
+      when txt      = $2 then italic_txt(txt)
+      when txt      = $3 then strong_txt(txt)
+      when bracket  = $4 then a_href($5, bracket, 'outlink')
+      when pagename = $6 then "[[#{pagename}|#{pagename}]]"
+      when page_alias = $7 then "[[#{$8}|#{page_alias}]]"
+      when uri      = $9 then a_href(uri, uri, 'outlink')
       else
         raise 'must not happen'
       end
     }
+  end
+
+  def italic_txt(txt)
+    %Q[<i>#{txt}</i>]
+  end
+  def strong_txt(txt)
+    %Q[<b>#{txt}</b>]
   end
 
   def a_href(uri, label, cssclass)
